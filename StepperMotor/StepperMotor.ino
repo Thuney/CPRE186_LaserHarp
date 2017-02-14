@@ -24,8 +24,8 @@ void setup() {
   pinMode(LASER, OUTPUT);
   resetEDPins(); //Set step, direction, microstep and enable pins to default states
   Serial.begin(9600);
-  digitalWrite(EN, LOW);
-  toStartingAngle(startingAngle);
+//  digitalWrite(EN, LOW);
+//  toStartingAngle(startingAngle);
   
 }
 
@@ -33,20 +33,19 @@ void setup() {
 void loop() {
   while(Serial.available())
   {
-      digitalWrite(EN, LOW);
       user_input = Serial.read(); //Read user input and trigger appropriate function
       if(user_input == '1')
       {
-        for(int i=0;i<100;i++)
+        digitalWrite(EN, LOW);
+        for(int i=0;i<1000;i++)
         {
           stepMotor();
-//          nextStep(4);
-//          Serial.println(currentStep);
-////          pulseLaser();
         }
       }
       else
+      {
         resetEDPins();
+      }
   }
 }
 
