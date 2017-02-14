@@ -4,12 +4,16 @@
 #define MS1 4
 #define MS2 5
 #define EN  6
+#define LASER 7
+#define STEPSIZE 1.8
 
-//Declare variables for functions
+const double startingAngle = 22.5; //Degrees
+const double endingAngle = 67.5;   //Degrees
+
 char user_input;
-int x;
-int y;
-int state;
+int numBeams = 11;
+int currentStep = 1;
+bool forward = false; //true is forward, false is backward
 
 void setup() {
   pinMode(stp, OUTPUT);
@@ -17,116 +21,73 @@ void setup() {
   pinMode(MS1, OUTPUT);
   pinMode(MS2, OUTPUT);
   pinMode(EN, OUTPUT);
+  pinMode(LASER, OUTPUT);
   resetEDPins(); //Set step, direction, microstep and enable pins to default states
   Serial.begin(9600);
+  digitalWrite(EN, LOW);
+  toStartingAngle(startingAngle);
+  
 }
 
  //Main loop
 void loop() {
-  while(Serial.available()){
+  while(Serial.available())
+  {
+      digitalWrite(EN, LOW);
       user_input = Serial.read(); //Read user input and trigger appropriate function
-      digitalWrite(EN, LOW); //Pull enable pin low to allow motor control
-      if (user_input =='1')
+      if(user_input == '1')
       {
-         StepForwardDefault();
-      }
-      else if(user_input =='2')
-      {
-        ReverseStepDefault();
-      }
-      else if(user_input =='3')
-      {
-        SmallStepMode();
-      }
-      else if(user_input =='4')
-      {
-        ForwardBackwardStep();
+        for(int i=0;i<100;i++)
+        {
+          stepMotor();
+//          nextStep(4);
+//          Serial.println(currentStep);
+////          pulseLaser();
+        }
       }
       else
-      {
-        Serial.println("Invalid option entered.");
-      }
-      resetEDPins();
+        resetEDPins();
   }
 }
 
-//Default microstep mode function
-void StepForwardDefault()
+void nextStep(int incSteps)
 {
-  Serial.println("Moving forward at default step mode.");
-  digitalWrite(dir, LOW); //Pull direction pin low to move "forward"
-  for(x= 1; x<1000; x++)  //Loop the forward stepping enough times for motion to be visible
+  forward = (currentStep == numBeams || currentStep == 1) ? !forward : forward;
+
+  if(forward)
+    digitalWrite(dir, HIGH);
+  else
+    digitalWrite(dir, LOW);
+  
+  for(int i=0; i<incSteps; i++)
   {
-    digitalWrite(stp,HIGH); //Trigger one step forward
-    delay(1);
-    digitalWrite(stp,LOW); //Pull step pin low so it can be triggered again
-    delay(1);
+    stepMotor();
   }
-  Serial.println("Enter new option");
-  Serial.println();
+  currentStep += (forward) ? 1 : -1;
 }
 
-//Reverse default microstep mode function
-void ReverseStepDefault()
+void toStartingAngle(int angle)
 {
-  Serial.println("Moving in reverse at default step mode.");
-  digitalWrite(dir, HIGH); //Pull direction pin high to move in "reverse"
-  for(x= 1; x<1000; x++)  //Loop the stepping enough times for motion to be visible
+  for(int i=0; i < angle/STEPSIZE; i++)
   {
-    digitalWrite(stp,HIGH); //Trigger one step
-    delay(1);
-    digitalWrite(stp,LOW); //Pull step pin low so it can be triggered again
-    delay(1);
+    stepMotor();
   }
-  Serial.println("Enter new option");
-  Serial.println();
 }
 
-// 1/8th microstep foward mode function
-void SmallStepMode()
+void stepMotor()
 {
-  Serial.println("Stepping at 1/8th microstep mode.");
-  digitalWrite(dir, LOW); //Pull direction pin low to move "forward"
-  digitalWrite(MS1, HIGH); //Pull MS1, and MS2 high to set logic to 1/8th microstep resolution
-  digitalWrite(MS2, HIGH);
-  for(x= 1; x<1000; x++)  //Loop the forward stepping enough times for motion to be visible
-  {
-    digitalWrite(stp,HIGH); //Trigger one step forward
-    delay(1);
-    digitalWrite(stp,LOW); //Pull step pin low so it can be triggered again
-    delay(1);
-  }
-  Serial.println("Enter new option");
-  Serial.println();
+  digitalWrite(stp, HIGH);
+  delay(1);
+  digitalWrite(stp, LOW);
+  delay(1);
 }
 
-//Forward/reverse stepping function
-void ForwardBackwardStep()
+void pulseLaser()
 {
-  Serial.println("Alternate between stepping forward and reverse.");
-  for(x= 1; x<5; x++)  //Loop the forward stepping enough times for motion to be visible
-  {
-    //Read direction pin state and change it
-    state=digitalRead(dir);
-    if(state == HIGH)
-    {
-      digitalWrite(dir, LOW);
-    }
-    else if(state ==LOW)
-    {
-      digitalWrite(dir,HIGH);
-    }
-
-    for(y=1; y<1000; y++)
-    {
-      digitalWrite(stp,HIGH); //Trigger one step
-      delay(1);
-      digitalWrite(stp,LOW); //Pull step pin low so it can be triggered again
-      delay(1);
-    }
-  }
-  Serial.println("Enter new option:");
-  Serial.println();
+  digitalWrite(LASER, HIGH);
+  delay(1);
+  digitalWrite(LASER, LOW);
+  delay(1);
 }
 
 //Reset Easy Driver pins to default states
@@ -137,6 +98,7 @@ void resetEDPins()
   digitalWrite(MS1, LOW);
   digitalWrite(MS2, LOW);
   digitalWrite(EN, HIGH);
+  digitalWrite(LASER, LOW);
 }
 
 
