@@ -1,4 +1,4 @@
- //Declare pin functions on Redboard
+   //Declare pin functions on Redboard
 #define stp 2
 #define dir 3
 #define MS1 4
@@ -7,13 +7,13 @@
 #define LASER 7
 #define STEPSIZE 1.8
 
-const double startingAngle = 22.5; //Degrees
-const double endingAngle = 67.5;   //Degrees
+const double startingAngle = 27; //Degrees
+const double endingAngle = 63;   //Degrees
 
 char user_input;
 int numBeams = 11;
 int currentStep = 1;
-bool forward = false; //true is forward, false is backward
+bool forward = true; //true is forward, false is backward
 
 void setup() {
   pinMode(stp, OUTPUT);
@@ -21,48 +21,25 @@ void setup() {
   pinMode(MS1, OUTPUT);
   pinMode(MS2, OUTPUT);
   pinMode(EN, OUTPUT);
-  pinMode(LASER, OUTPUT);
+//  pinMode(LASER, OUTPUT);
   resetEDPins(); //Set step, direction, microstep and enable pins to default states
   Serial.begin(9600);
-//  digitalWrite(EN, LOW);
-//  toStartingAngle(startingAngle);
-  
+  digitalWrite(EN, LOW);
+  toStartingAngle(startingAngle);
 }
 
  //Main loop
 void loop() {
   while(Serial.available())
   {
-      user_input = Serial.read(); //Read user input and trigger appropriate function
-      if(user_input == '1')
-      {
-        digitalWrite(EN, LOW);
-        for(int i=0;i<1000;i++)
-        {
-          stepMotor();
-        }
-      }
-      else
-      {
-        resetEDPins();
-      }
+    char input = Serial.read();
+    if(input == '1') {
+      digitalWrite(EN, LOW);
+      for(int i=0;i<1000;i++)
+        nextStep(2);   
+    }
+    resetEDPins();
   }
-}
-
-void nextStep(int incSteps)
-{
-  forward = (currentStep == numBeams || currentStep == 1) ? !forward : forward;
-
-  if(forward)
-    digitalWrite(dir, HIGH);
-  else
-    digitalWrite(dir, LOW);
-  
-  for(int i=0; i<incSteps; i++)
-  {
-    stepMotor();
-  }
-  currentStep += (forward) ? 1 : -1;
 }
 
 void toStartingAngle(int angle)
@@ -73,12 +50,31 @@ void toStartingAngle(int angle)
   }
 }
 
+void nextStep(int incSteps)
+{ 
+  currentStep += (forward) ? 1 : -1;
+  for(int i=0; i<incSteps; i++)
+  {
+    stepMotor();
+  }
+  if(currentStep == numBeams || currentStep == 1) switchDirection();
+}
+
+void switchDirection()
+{
+  forward = !forward;
+  if(forward)
+    digitalWrite(dir, HIGH);
+  else
+    digitalWrite(dir, LOW);
+}
+
 void stepMotor()
 {
   digitalWrite(stp, HIGH);
-  delay(1);
+  delay(2);
   digitalWrite(stp, LOW);
-  delay(1);
+  delay(2);
 }
 
 void pulseLaser()
@@ -93,11 +89,11 @@ void pulseLaser()
 void resetEDPins()
 {
   digitalWrite(stp, LOW);
-  digitalWrite(dir, LOW);
+  digitalWrite(dir, HIGH);
   digitalWrite(MS1, LOW);
   digitalWrite(MS2, LOW);
   digitalWrite(EN, HIGH);
-  digitalWrite(LASER, LOW);
+//  digitalWrite(LASER, LOW);
 }
 
 
