@@ -27,7 +27,7 @@ const double startingAngle = 27; //Degrees
 const double endingAngle = 63;   //Degrees
 
 const int numBeams = 11;
-const int currentStep = 1;
+int currentStep = 1;
 
 //Variables for tracking current states
 char user_input;
