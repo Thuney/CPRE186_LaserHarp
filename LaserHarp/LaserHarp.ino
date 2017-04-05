@@ -77,7 +77,7 @@ void loop() {
         else
           //Otherwise, don't play any tone
           noTone();
-        nextStep(2);   
+        nextStep((endingAngle - startingAngle)/(numBeams-1);
       }
         
     //Reset the pins to their defaults
@@ -139,7 +139,7 @@ void stepMotor()
 
 /**
  * Pulses laser for 1ms. This actually might need to be incorporated into
- * the method above it
+ * the function above it
  */
 void pulseLaser()
 {
