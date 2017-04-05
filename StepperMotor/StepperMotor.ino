@@ -1,13 +1,17 @@
-   //Declare pin functions on Redboard
+#include "notes.h"
+
+//Declare pin positions on Arduino
 #define stp 2
 #define dir 3
 #define MS1 4
 #define MS2 5
 #define EN  6
 #define LASER 7
+#define NOISE_OUT 8
+#define PHOTOGATE A0
 #define STEPSIZE 1.8
 
-//Information about our range of beams determined via math
+//Information about our range of beams determined via math, logic, and physics
 /**What's important to note here is that the angle of incidence -- (where our beam goes) --
  * is twice the angle the mirror makes with the x-axis, where positive angles are counterclockwise.
  * 
@@ -18,14 +22,17 @@
  * we lose a lot of precision in our stepper motor. As such, these numbers were picked because they were the easiest
  * to work with.
 **/
+//These angle measures are referring to the angle of the mirror, not the beam angle
 const double startingAngle = 27; //Degrees
 const double endingAngle = 63;   //Degrees
+
 const int numBeams = 11;
 const int currentStep = 1;
 
 //Variables for tracking current states
 char user_input;
 bool forward = true; //true is forward, false is backward
+int photogate_baseline = 0;
 
 void setup() {
   //Define our pins as input or output
@@ -34,7 +41,9 @@ void setup() {
   pinMode(MS1, OUTPUT);
   pinMode(MS2, OUTPUT);
   pinMode(EN, OUTPUT);
-//  pinMode(LASER, OUTPUT);
+  //pinMode(LASER, OUTPUT);
+  pinMode(NOISE_OUT, OUTPUT);
+  pinMode(PHOTOGATE, INPUT);
 
   //Set initial voltages to the pins
   resetEDPins(); //Set step, direction, microstep and enable pins to default states
@@ -43,6 +52,8 @@ void setup() {
   Serial.begin(9600);
   //Move to our starting location
   toStartingAngle(startingAngle);
+  //Defines the base light level in the room
+  photogate_baseline = analogRead(PHOTOGATE);
 }
 
 //Main loop
@@ -53,10 +64,21 @@ void loop() {
     //Next user input character
     char input = Serial.read();
     
-    if(input == '1') 
+    if(input == '1')
       //Oscillate 1000 times
       for(int i=0;i<1000;i++)
+      {
+        //Current reading from photogate
+        int photogate_current = analogRead(PHOTOGATE);
+        //If a beam has been broken
+        if(photogate_current - photogate_baseline > 200) //Values may need tweaking
+          //Play the tone depending on what beam is being broken
+          playTone(currentStep);
+        else
+          //Otherwise, don't play any tone
+          noTone();
         nextStep(2);   
+      }
         
     //Reset the pins to their defaults
     resetEDPins();
@@ -73,6 +95,8 @@ void toStartingAngle(int angle)
   //Step the motor as many times as it takes to pass the target angle
   for(int i=0; i < angle/STEPSIZE; i++)
     stepMotor();
+  //Disable motor control
+  digitalWrite(EN, HIGH);
 }
 
 /**
@@ -135,5 +159,58 @@ void resetEDPins()
   digitalWrite(EN, HIGH);
 //  digitalWrite(LASER, LOW);
 }
+
+/**
+ * Sets a tone depending on the currentStep position
+ */
+void playTone(int currentStep)
+{
+  int frequency;
+  //Note declarations are in "notes.h"
+  /**
+   * Honestly, it might be slightly confusing as to why I did my cases in decreasing order,
+   * but the way the currentStep is set up, the farthest beam to the right is currentStep == 1,
+   * and I wanted the notes to be in ascending order from left to right
+   */
+  switch(currentStep)
+  {
+    case 11:
+      frequency = NOTE_C2;
+      break;
+    case 10:
+      frequency = NOTE_D2;
+      break;
+    case 9:
+      frequency = NOTE_E2;
+      break;
+    case 8:
+      frequency = NOTE_F2;
+      break;
+    case 7:
+      frequency = NOTE_G2;
+      break;
+    case 6:
+      frequency = NOTE_A2;
+      break;
+    case 5:
+      frequency = NOTE_B2;
+      break;
+    case 4:
+      frequency = NOTE_C3;
+      break;
+    case 3:
+      frequency = NOTE_D3;
+      break;
+    case 2:
+      frequency = NOTE_E3;
+      break;
+    case 1:
+      frequency = NOTE_F3;
+      break;
+  }
+  tone(NOISE_OUT, frequency);
+}
+
+
 
 
