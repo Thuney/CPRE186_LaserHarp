@@ -53,7 +53,7 @@ void setup() {
   //Move to our starting location
   toStartingAngle(startingAngle);
   //Defines the base light level in the room
-  photogate_baseline = analogRead(PHOTOGATE);
+//  photogate_baseline = analogRead(PHOTOGATE);
 }
 
 //Main loop
@@ -68,16 +68,18 @@ void loop() {
       //Oscillate 1000 times
       for(int i=0;i<1000;i++)
       {
-        //Current reading from photogate
-        int photogate_current = analogRead(PHOTOGATE);
-        //If a beam has been broken
-        if(photogate_current - photogate_baseline > 200) //Values may need tweaking
-          //Play the tone depending on what beam is being broken
-          playTone(currentStep);
-        else
-          //Otherwise, don't play any tone
-          noTone();
-        nextStep((endingAngle - startingAngle)/(numBeams-1);
+        /* --COMMENTED OUT BECAUSE CIRCUIT ISN'T UP TO DATE WITH THIS FUNCTIONALITY --
+          //Current reading from photogate
+          int photogate_current = analogRead(PHOTOGATE);
+          //If a beam has been broken
+          if(photogate_current - photogate_baseline > 200) //Values may need tweaking
+            //Play the tone depending on what beam is being broken
+            playTone(currentStep);
+          else
+            //Otherwise, don't play any tone
+            noTone();
+        */
+        nextStep((endingAngle - startingAngle)/(numBeams-1));
       }
         
     //Reset the pins to their defaults
