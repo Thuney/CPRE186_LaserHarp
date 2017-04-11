@@ -32,7 +32,7 @@ int currentStep = 1;
 //Variables for tracking current states
 char user_input;
 bool forward = true; //true is forward, false is backward
-int photogate_baseline;
+int photogate_baseline = 0;
 
 void setup() {
   //Define our pins as input or output
@@ -43,7 +43,6 @@ void setup() {
   pinMode(EN, OUTPUT);
   //pinMode(LASER, OUTPUT);
   pinMode(NOISE_OUT, OUTPUT);
-  pinMode(PHOTOGATE, INPUT);
 
   //Set initial voltages to the pins
   resetEDPins(); //Set step, direction, microstep and enable pins to default states
@@ -59,42 +58,36 @@ void setup() {
 //Main loop
 void loop() {
   //Loop when the serial monitor is open
-  while(Serial.available())
-  {
+//  while(Serial.available())
+//  {
     //Next user input character
-//    char input = Serial.read();
-    int photogate_val = analogRead(PHOTOGATE);
+    char input = Serial.read();
+    boolean playing = false;
     
-//    if(input == '1')
-//      //Oscillate 1000 times
-//      for(int i=0;i<1000;i++)
-//      {
-//          //--COMMENTED OUT BECAUSE CIRCUIT ISN'T UP TO DATE WITH THIS FUNCTIONALITY --
-//          //Current reading from photogate
-//          int photogate_current = analogRead(PHOTOGATE);
-//          //If a beam has been broken
-//          if(photogate_current - photogate_baseline > 275) //Values may need tweaking
-//          {
-//            //Play the tone depending on what beam is being broken
-//            playTone(1);
-//            noTone(NOISE_OUT);
-//          }
-//          else
-//            //Otherwise, don't play any tone
-//            noTone(NOISE_OUT);
-////          nextStep((endingAngle - startingAngle)/(numBeams-1));
-//      }
-    Serial.println(photogate_val - photogate_baseline);
-    if(photogate_val - photogate_baseline > 275)
-    {
-      playTone(1);
-    }
-    else
-      noTone(NOISE_OUT);
+    if(input == '1')
+      //Oscillate 1000 times
+      for(int i=0;i<1000;i++)
+      {
+          int photogate_val = analogRead(PHOTOGATE);
+          //If a beam has been broken
+          if(photogate_val - photogate_baseline > 150 && !playing) //Values may need tweaking
+          {
+            //Play the tone depending on what beam is being broken
+            playTone(currentStep);
+            playing = true;
+          }
+          else if(photogate_val - photogate_baseline < 150)
+          {
+            //Otherwise, don't play any tone
+            noTone(NOISE_OUT);
+            playing = false;
+          }
+          nextStep((endingAngle - startingAngle)/(numBeams-1));
+      }
         
     //Reset the pins to their defaults
     resetEDPins();
-  }
+//  }
 }
 
 /**
@@ -170,6 +163,7 @@ void resetEDPins()
   digitalWrite(MS2, LOW);
   digitalWrite(EN, HIGH);
 //  digitalWrite(LASER, LOW);
+  noTone(NOISE_OUT);
 }
 
 /**
@@ -222,6 +216,8 @@ void playTone(int currentStep)
   }
   tone(NOISE_OUT, frequency);
 }
+
+
 
 
 
