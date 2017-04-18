@@ -42,7 +42,7 @@ void setup() {
   pinMode(MS1, OUTPUT);
   pinMode(MS2, OUTPUT);
   pinMode(EN, OUTPUT);
-  //pinMode(LASER, OUTPUT);
+//  pinMode(LASER, OUTPUT);
   pinMode(NOISE_OUT, OUTPUT);
 
   //Set initial voltages to the pins
@@ -58,7 +58,7 @@ void setup() {
 
 //Main loop
 void loop() {
-  //Loop when the serial monitor is open
+    //Loop when the serial monitor is open
 //  while(Serial.available())
 //  {
     //Next user input character
