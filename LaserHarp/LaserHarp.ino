@@ -33,6 +33,7 @@ int currentStep = 1;
 char user_input;
 bool forward = true; //true is forward, false is backward
 int photogate_baseline = 0;
+int photogate_trigger = 30;
 
 void setup() {
   //Define our pins as input or output
@@ -69,14 +70,15 @@ void loop() {
       for(int i=0;i<1000;i++)
       {
           int photogate_val = analogRead(PHOTOGATE);
-          //If a beam has been broken
-          if(photogate_val - photogate_baseline > 150 && !playing) //Values may need tweaking
+          Serial.println(photogate_val - photogate_baseline);
+          //If a beam has been broken and we aren't playing a note
+          if(photogate_val - photogate_baseline > photogate_trigger && !playing) //Values may need tweaking
           {
             //Play the tone depending on what beam is being broken
             playTone(currentStep);
             playing = true;
           }
-          else if(photogate_val - photogate_baseline < 150)
+          else if(photogate_val - photogate_baseline < photogate_trigger)
           {
             //Otherwise, don't play any tone
             noTone(NOISE_OUT);
@@ -181,44 +183,38 @@ void playTone(int currentStep)
   switch(currentStep)
   {
     case 11:
-      frequency = NOTE_C2;
-      break;
-    case 10:
-      frequency = NOTE_D2;
-      break;
-    case 9:
-      frequency = NOTE_E2;
-      break;
-    case 8:
-      frequency = NOTE_F2;
-      break;
-    case 7:
-      frequency = NOTE_G2;
-      break;
-    case 6:
-      frequency = NOTE_A2;
-      break;
-    case 5:
-      frequency = NOTE_B2;
-      break;
-    case 4:
       frequency = NOTE_C3;
       break;
-    case 3:
+    case 10:
       frequency = NOTE_D3;
       break;
-    case 2:
+    case 9:
       frequency = NOTE_E3;
       break;
-    case 1:
+    case 8:
       frequency = NOTE_F3;
+      break;
+    case 7:
+      frequency = NOTE_G3;
+      break;
+    case 6:
+      frequency = NOTE_A3;
+      break;
+    case 5:
+      frequency = NOTE_B3;
+      break;
+    case 4:
+      frequency = NOTE_C4;
+      break;
+    case 3:
+      frequency = NOTE_D4;
+      break;
+    case 2:
+      frequency = NOTE_E4;
+      break;
+    case 1:
+      frequency = NOTE_F4;
       break;
   }
   tone(NOISE_OUT, frequency);
 }
-
-
-
-
-
-
