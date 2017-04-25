@@ -28,12 +28,15 @@ const double endingAngle = 63;   //Degrees
 
 const int numBeams = 11;
 int currentStep = 1;
+//Test
+int currentNote = 0;
+int steps = 0;
 
 //Variables for tracking current states
 char user_input;
 bool forward = true; //true is forward, false is backward
 int photogate_baseline = 0;
-int photogate_trigger = 30;
+int photogate_trigger = 200;
 
 void setup() {
   //Define our pins as input or output
@@ -42,7 +45,8 @@ void setup() {
   pinMode(MS1, OUTPUT);
   pinMode(MS2, OUTPUT);
   pinMode(EN, OUTPUT);
-//  pinMode(LASER, OUTPUT);
+  pinMode(LASER, OUTPUT);
+  digitalWrite(LASER, LOW);
   pinMode(NOISE_OUT, OUTPUT);
 
   //Set initial voltages to the pins
@@ -58,38 +62,35 @@ void setup() {
 
 //Main loop
 void loop() {
-    //Loop when the serial monitor is open
-//  while(Serial.available())
-//  {
     //Next user input character
     char input = Serial.read();
     boolean playing = false;
-    
     if(input == '1')
       //Oscillate 1000 times
-      for(int i=0;i<1000;i++)
+      for(int i=0;i<3000;i++)
       {
+          if((input = Serial.read()) == '0') break;
           int photogate_val = analogRead(PHOTOGATE);
-          Serial.println(photogate_val - photogate_baseline);
+          int difference = photogate_val - photogate_baseline;
           //If a beam has been broken and we aren't playing a note
-          if(photogate_val - photogate_baseline > photogate_trigger && !playing) //Values may need tweaking
+          if((difference > photogate_trigger && !playing) || (difference > photogate_trigger && currentStep != currentNote))
           {
             //Play the tone depending on what beam is being broken
             playTone(currentStep);
             playing = true;
+            currentNote = currentStep;
           }
-          else if(photogate_val - photogate_baseline < photogate_trigger)
+          else if(difference < (photogate_trigger-(photogate_trigger*.1)) && currentStep == currentNote)
           {
             //Otherwise, don't play any tone
             noTone(NOISE_OUT);
             playing = false;
           }
           nextStep((endingAngle - startingAngle)/(numBeams-1));
+          pulseLaser();
       }
-        
     //Reset the pins to their defaults
     resetEDPins();
-//  }
 }
 
 /**
@@ -153,7 +154,6 @@ void pulseLaser()
   digitalWrite(LASER, HIGH);
   delay(1);
   digitalWrite(LASER, LOW);
-  delay(1);
 }
 
 //Reset Easy Driver pins to default states
@@ -164,7 +164,7 @@ void resetEDPins()
   digitalWrite(MS1, LOW);
   digitalWrite(MS2, LOW);
   digitalWrite(EN, HIGH);
-//  digitalWrite(LASER, LOW);
+  digitalWrite(LASER, LOW);
   noTone(NOISE_OUT);
 }
 
@@ -183,37 +183,37 @@ void playTone(int currentStep)
   switch(currentStep)
   {
     case 11:
-      frequency = NOTE_C3;
-      break;
-    case 10:
-      frequency = NOTE_D3;
-      break;
-    case 9:
-      frequency = NOTE_E3;
-      break;
-    case 8:
-      frequency = NOTE_F3;
-      break;
-    case 7:
-      frequency = NOTE_G3;
-      break;
-    case 6:
-      frequency = NOTE_A3;
-      break;
-    case 5:
-      frequency = NOTE_B3;
-      break;
-    case 4:
       frequency = NOTE_C4;
       break;
-    case 3:
+    case 10:
       frequency = NOTE_D4;
       break;
-    case 2:
+    case 9:
       frequency = NOTE_E4;
       break;
-    case 1:
+    case 8:
       frequency = NOTE_F4;
+      break;
+    case 7:
+      frequency = NOTE_G4;
+      break;
+    case 6:
+      frequency = NOTE_A4;
+      break;
+    case 5:
+      frequency = NOTE_B4;
+      break;
+    case 4:
+      frequency = NOTE_C5;
+      break;
+    case 3:
+      frequency = NOTE_D5;
+      break;
+    case 2:
+      frequency = NOTE_E5;
+      break;
+    case 1:
+      frequency = NOTE_F5;
       break;
   }
   tone(NOISE_OUT, frequency);
